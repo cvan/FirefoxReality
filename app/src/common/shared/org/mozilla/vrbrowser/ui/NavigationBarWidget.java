@@ -12,17 +12,11 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
-import org.mozilla.vrbrowser.R;
-import org.mozilla.vrbrowser.SessionStore;
-import org.mozilla.vrbrowser.Widget;
-import org.mozilla.vrbrowser.WidgetManagerDelegate;
-import org.mozilla.vrbrowser.WidgetPlacement;
+import org.mozilla.vrbrowser.*;
 import org.mozilla.vrbrowser.audio.AudioEngine;
 
 import java.util.ArrayList;
@@ -75,7 +69,9 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
 
     private void initialize(Context aContext) {
         inflate(aContext, R.layout.navigation_bar, this);
+
         mAudio = AudioEngine.fromContext(aContext);
+
         mBackButton = findViewById(R.id.backButton);
         mForwardButton = findViewById(R.id.forwardButton);
         mReloadButton = findViewById(R.id.reloadButton);
@@ -341,6 +337,7 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
 
         AnimationHelper.fadeIn(mNavigationContainer, AnimationHelper.FADE_ANIMATION_DURATION, null);
         AnimationHelper.fadeOut(mFocusModeContainer, 0, null);
+
         mFocusEnterButton.setHovered(false);
         mFocusEnterButton.setPressed(false);
         mFocusExitButton.setHovered(false);
