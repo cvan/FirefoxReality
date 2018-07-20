@@ -283,6 +283,7 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
             return;
         }
         mIsInFocusMode = true;
+
         AnimationHelper.fadeIn(mFocusModeContainer, AnimationHelper.FADE_ANIMATION_DURATION, new Runnable() {
             @Override
             public void run() {
@@ -312,7 +313,7 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
 
         mWidgetPlacement.anchorX = 1.0f;
         mWidgetPlacement.parentAnchorX = 1.0f;
-        mWidgetManager.updateWidget(this);
+//        mWidgetManager.updateWidget(this);
         mWidgetManager.pushBackHandler(mFocusBackHandler);
 
         mWidgetManager.setTrayVisible(false);
@@ -350,7 +351,7 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
 
         mWidgetPlacement.anchorX = 0.5f;
         mWidgetPlacement.parentAnchorX = 0.5f;
-        mWidgetManager.updateWidget(this);
+//        mWidgetManager.updateWidget(this);
         mWidgetManager.popBackHandler(mFocusBackHandler);
 
         if (SessionStore.get().isInFullScreen()) {

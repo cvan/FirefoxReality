@@ -94,4 +94,16 @@ public class WidgetPlacement {
         return unitFromMeters(floatDimension(aContext, aDimensionId));
     }
 
+    public void setWidth(int aWidth) {
+        width = aWidth;
+    }
+
+    public void setHeight(int aHeight) {
+        width = aHeight;
+    }
+
+    public void setWorldWidth(float aWorldWidth) {
+        worldWidth = aWorldWidth;
+    }
+
 }

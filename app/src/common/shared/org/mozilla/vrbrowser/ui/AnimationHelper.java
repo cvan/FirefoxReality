@@ -1,12 +1,17 @@
 package org.mozilla.vrbrowser.ui;
 
+import android.transition.AutoTransition;
+import android.transition.ChangeBounds;
+import android.transition.Transition;
+import android.transition.TransitionManager;
+import android.util.Log;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.animation.*;
 
 public class AnimationHelper {
+    private static final String LOGTAG = "VRB";
     public static final long FADE_ANIMATION_DURATION = 150;
     
     public static void fadeIn(View aView, long delay, final Runnable aCallback) {
@@ -63,5 +68,58 @@ public class AnimationHelper {
         });
 
         aView.setAnimation(animation);
+    }
+
+    public static void animateViewsTransition(final ViewGroup aContainer,
+                                              final ViewGroup fromViewGrounp,
+                                              final ViewGroup toViewGrounp,
+                                              final int delay) {
+        ChangeBounds transition = new ChangeBounds();
+        transition.setDuration(delay);
+        transition.setInterpolator(new AccelerateDecelerateInterpolator());
+
+        animateViewsTransition(aContainer, fromViewGrounp, toViewGrounp, transition);
+    }
+
+    public static void animateViewsTransition(final ViewGroup aContainer,
+                                              final ViewGroup fromViewGrounp,
+                                              final ViewGroup toViewGrounp,
+                                              final Transition aTransition) {
+        final ViewTreeObserver.OnDrawListener mDrawListener = new ViewTreeObserver.OnDrawListener() {
+            @Override
+            public void onDraw() {
+                Log.d(LOGTAG, "Invalidating: " + aContainer.toString());
+                aContainer.invalidate();
+            }
+        };
+        aTransition.addListener(new Transition.TransitionListener() {
+            @Override
+            public void onTransitionStart(Transition transition) {
+                aContainer.getViewTreeObserver().addOnDrawListener(mDrawListener);
+            }
+
+            @Override
+            public void onTransitionEnd(Transition transition) {
+                aContainer.getViewTreeObserver().removeOnDrawListener(mDrawListener);
+            }
+
+            @Override
+            public void onTransitionCancel(Transition transition) {
+
+            }
+
+            @Override
+            public void onTransitionPause(Transition transition) {
+
+            }
+
+            @Override
+            public void onTransitionResume(Transition transition) {
+
+            }
+        });
+        TransitionManager.beginDelayedTransition(aContainer, aTransition);
+        fromViewGrounp.setVisibility(View.GONE);
+        toViewGrounp.setVisibility(View.VISIBLE);
     }
 }

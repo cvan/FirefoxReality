@@ -5,6 +5,9 @@
 
 package org.mozilla.vrbrowser.ui;
 
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -112,6 +115,9 @@ public abstract class UIWidget extends FrameLayout implements Widget {
         float defaultAspect = (float) defaultWidth / (float) defaultHeight;
         float worldAspect = aWorldWidth / aWorldHeight;
 
+        int targetWidth = mWidgetPlacement.width;
+        int targetHeight = mWidgetPlacement.height;
+        float targetWorldWidth = aWorldWidth;
         if (worldAspect > defaultAspect) {
             mWidgetPlacement.height = (int) Math.ceil(defaultWidth / worldAspect);
             mWidgetPlacement.width = defaultWidth;
@@ -119,8 +125,24 @@ public abstract class UIWidget extends FrameLayout implements Widget {
             mWidgetPlacement.width = (int) Math.ceil(defaultHeight * worldAspect);
             mWidgetPlacement.height = defaultHeight;
         }
-        mWidgetPlacement.worldWidth = aWorldWidth;
-        mWidgetManager.updateWidget(this);
+//        mWidgetPlacement.worldWidth = aWorldWidth;
+//        mWidgetManager.updateWidget(this);
+
+        PropertyValuesHolder pvhW = PropertyValuesHolder.ofInt("width", mWidgetPlacement.width, targetWidth);
+        PropertyValuesHolder pvhH = PropertyValuesHolder.ofInt("height", mWidgetPlacement.height, targetHeight);
+        PropertyValuesHolder pvhWW = PropertyValuesHolder.ofFloat("worldWidth", mWidgetPlacement.worldWidth, targetWorldWidth);
+        ObjectAnimator animator = ObjectAnimator.ofPropertyValuesHolder(mWidgetPlacement, pvhW, pvhH,pvhWW);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                mWidgetPlacement.width = ((Integer)valueAnimator.getAnimatedValue("width")).intValue();
+                mWidgetPlacement.height = ((Integer)valueAnimator.getAnimatedValue("height")).intValue();
+                mWidgetPlacement.worldWidth = ((Float)valueAnimator.getAnimatedValue("worldWidth")).floatValue();
+                mWidgetManager.updateWidget(UIWidget.this);
+            }
+        });
+        animator.setDuration(500);
+        animator.start();
     }
 
     @Override
