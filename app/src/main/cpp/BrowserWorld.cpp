@@ -870,7 +870,7 @@ void
 BrowserWorld::CreateFloor() {
   ASSERT_ON_RENDER_THREAD();
   vrb::TransformPtr model = Transform::Create(m.create);
-  std::string environmentPath = "meadow.obj";
+  std::string environmentPath = "meadow_v4.obj";
 #ifdef INJECT_ENVIRONMENT_PATH
   std::string injectPath = VRBrowser::GetStorageAbsolutePath(INJECT_ENVIRONMENT_PATH);
   if (std::ifstream(injectPath)) {
