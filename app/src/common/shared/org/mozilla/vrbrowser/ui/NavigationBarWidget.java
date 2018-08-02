@@ -406,6 +406,11 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
         return null;
     }
 
+    @Override
+    public void onLoadError(GeckoSession session, String uri, int category, int error) {
+
+    }
+
     public void release() {
         SessionStore.get().removeNavigationListener(this);
         SessionStore.get().removeProgressListener(this);
@@ -445,11 +450,6 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
             mURLBar.setURL(aUri);
         }
         return null;
-    }
-
-    @Override
-    public void onLoadError(GeckoSession session, String uri, int category, int error) {
-
     }
 
     // Progress Listener
