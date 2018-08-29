@@ -82,7 +82,15 @@ public class KeyboardWidget extends UIWidget implements CustomKeyboardView.OnKey
         mKeyboardview.setPreviewEnabled(false);
         mKeyboardview.setKeyboard(mKeyboardQuerty);
 
-        int[] featuredKeys = {' ', Keyboard.KEYCODE_DELETE, Keyboard.KEYCODE_DONE, Keyboard.KEYCODE_CANCEL, CustomKeyboard.KEYCODE_VOICE_INPUT};
+        int[] featuredKeys = {
+          ' ',
+          Keyboard.KEYCODE_DELETE,
+          Keyboard.KEYCODE_DONE,
+          Keyboard.KEYCODE_CANCEL,
+          CustomKeyboard.KEYCODE_VOICE_INPUT,
+          CustomKeyboard.KEYCODE_BOOKMARK_ADD,
+          CustomKeyboard.KEYCODE_BOOKMARK_REMOVE
+        };
         mKeyboardview.setFeaturedKeyBackground(R.drawable.keyboard_featured_button_background, featuredKeys);
 
         mKeyboardview.setOnKeyListener(new View.OnKeyListener() {
@@ -314,6 +322,12 @@ public class KeyboardWidget extends UIWidget implements CustomKeyboardView.OnKey
             case CustomKeyboard.KEYCODE_VOICE_INPUT:
                 handleVoiceInput();
                 break;
+            case CustomKeyboard.KEYCODE_BOOKMARK_ADD:
+                handleBookmarkAdd();
+                break;
+            case CustomKeyboard.KEYCODE_BOOKMARK_REMOVE:
+                handleBookmarkRemove();
+                break;
             case CustomKeyboard.KEYCODE_STRING_COM:
                 handleText(".com");
                 break;
@@ -479,6 +493,18 @@ public class KeyboardWidget extends UIWidget implements CustomKeyboardView.OnKey
         mKeyboardview.setVisibility(View.GONE);
         mVoiceInput.setVisibility(View.VISIBLE);
         TelemetryWrapper.voiceInputEvent();
+    }
+
+    private void handleBookmarkAdd() {
+        mKeyboardview.setVisibility(View.GONE);
+        mVoiceInput.setVisibility(View.VISIBLE);
+        TelemetryWrapper.bookmarkAddEvent();
+    }
+
+    private void handleBookmarkRemove() {
+        mKeyboardview.setVisibility(View.GONE);
+        mVoiceInput.setVisibility(View.VISIBLE);
+        TelemetryWrapper.bookmarkRemoveEvent();
     }
 
     private void postInputCommand(Runnable aRunnable) {
