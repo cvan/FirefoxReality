@@ -194,14 +194,16 @@ public class InternalPages {
     public static class PageResources {
         int html;
         int css;
+        int js;
 
-        private PageResources(int aHtml, int aCss) {
+        private PageResources(int aHtml, int aCss, int aJs) {
             html = aHtml;
             css = aCss;
+            js = aJs;
         }
 
-        public static PageResources create(int html, int css) {
-            return new PageResources(html, css);
+        public static PageResources create(int html, int css, int js) {
+            return new PageResources(html, css, js);
         }
     }
 
@@ -214,13 +216,15 @@ public class InternalPages {
 
         String html = readRawResourceString(context, resources.html);
         String css = readRawResourceString(context, resources.css);
+        String js = readRawResourceString(context, resources.js);
 
         html = html
-                .replace("%page-title%", context.getString(R.string.errorpage_title))
+                .replace("%pageTitle%", context.getString(R.string.errorpage_title))
                 .replace("%button%", context.getString(R.string.errorpage_refresh))
                 .replace("%messageShort%", context.getString(localizedData.titleRes))
                 .replace("%messageLong%", context.getString(localizedData.messageRes, uri))
-                .replace("%css%", css);
+                .replace("%css%", css)
+                .replace("%js%", js);
 
         return "data:text/html;base64," + Base64.encodeToString(html.getBytes(), Base64.DEFAULT);
     }
@@ -229,11 +233,13 @@ public class InternalPages {
                                          PageResources resources) {
         String html = readRawResourceString(context, resources.html);
         String css = readRawResourceString(context, resources.css);
+        String js = readRawResourceString(context, resources.js);
 
         html = html
-                .replace("%page-title%", context.getString(R.string.private_browsing_title))
-                .replace("%page-body%", context.getString(R.string.private_browsing_body))
-                .replace("%css%", css);
+                .replace("%pageTitle%", context.getString(R.string.private_browsing_title))
+                .replace("%pageBody%", context.getString(R.string.private_browsing_body))
+                .replace("%css%", css)
+                .replace("%js%", js);
 
         return html.getBytes();
     }

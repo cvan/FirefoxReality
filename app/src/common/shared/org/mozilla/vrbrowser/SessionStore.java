@@ -93,28 +93,28 @@ public class SessionStore implements GeckoSession.NavigationDelegate, GeckoSessi
     private InternalPages.PageResources errorPageResourcesForCategory(@LoadErrorCategory int category) {
         switch (category) {
             case GeckoSession.NavigationDelegate.ERROR_CATEGORY_UNKNOWN: {
-                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style);
+                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style, R.raw.error_script);
             }
             case GeckoSession.NavigationDelegate.ERROR_CATEGORY_SECURITY: {
-                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style);
+                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style, R.raw.error_script);
             }
             case GeckoSession.NavigationDelegate.ERROR_CATEGORY_NETWORK: {
-                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style);
+                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style, R.raw.error_script);
             }
             case GeckoSession.NavigationDelegate.ERROR_CATEGORY_CONTENT: {
-                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style);
+                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style, R.raw.error_script);
             }
             case GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI: {
-                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style);
+                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style, R.raw.error_script);
             }
             case GeckoSession.NavigationDelegate.ERROR_CATEGORY_PROXY: {
-                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style);
+                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style, R.raw.error_script);
             }
             case GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING: {
-                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style);
+                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style, R.raw.error_script);
             }
             default: {
-                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style);
+                return InternalPages.PageResources.create(R.raw.error_pages, R.raw.error_style, R.raw.error_script);
             }
         }
     }
@@ -571,7 +571,7 @@ public class SessionStore implements GeckoSession.NavigationDelegate, GeckoSessi
         if (mCurrentSession == null)
             return;
 
-        boolean isPrivateMode  = mCurrentSession.getSettings().getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);
+        boolean isPrivateMode = mCurrentSession.getSettings().getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);
         if (!isPrivateMode) {
             if (mPreviousSessionId == SessionStore.NO_SESSION_ID) {
                 mPreviousSessionId = getCurrentSessionId();
@@ -581,7 +581,7 @@ public class SessionStore implements GeckoSession.NavigationDelegate, GeckoSessi
                 int id = createSession(settings);
                 setCurrentSession(id);
 
-                InternalPages.PageResources pageResources = InternalPages.PageResources.create(R.raw.private_mode, R.raw.private_style);
+                InternalPages.PageResources pageResources = InternalPages.PageResources.create(R.raw.private_mode, R.raw.private_style, R.raw.private_script);
                 getCurrentSession().loadData(InternalPages.createAboutPage(mContext, pageResources), "text/html");
 
             } else {
