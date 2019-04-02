@@ -70,20 +70,19 @@
 
     getDesiredIndexFromQualityChoices (choices, desiredQuality) {
       desiredQuality = this.parseQuality(desiredQuality);
-      let idx = 0;
 
       if (this.ignoreDefault) {
         return choices.findIndex(size => size === desiredQuality);
       }
 
-      // TODO: If not found, go to the next best one.
+      // If the desired quality is not available, use the next best one.
       let bestChoice = null;
-      choices.reverse().forEach((size, idx) => {
-        if (size >= desiredQuality) {
+      choices.reverse().forEach(size => {
+        if (size >= desiredQuality && size >= bestChoice) {
           bestChoice = size;
         }
       });
-      return choices.indexOf(bestChoiceSize);
+      return choices.indexOf(bestChoice);
     }
 
     get currentQuality () {
@@ -261,14 +260,16 @@
   }
 
   const qs = window.URLSearchParams && new window.URLSearchParams(window.location.search);
+
   let desiredQuality = qs && (qs.get('vq') || qs.get('quality') || '').trim().toLowerCase();
+
   if (desiredQuality) {
-    improver = new YouTubeImprover({
+    new YouTubeImprover({
       defaultQuality: desiredQuality,
       ignoreDefault: true
     });
   } else {
-    improver = new YouTubeImprover({
+    new YouTubeImprover({
       defaultQuality: YOUTUBE_DEFAULT_QUALITY
     });
   }
