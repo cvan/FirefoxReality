@@ -4,3 +4,32 @@ div.alert-with-button-renderer,
 ytm-alert-with-button-renderer {
   display: none;
 }
+
+#footer-container {
+  max-width: 980px;
+}
+
+yt-base-gutter,
+yt-unlimited #footer-container.yt-base-gutter,
+.yt-base-gutter,
+.yt-unlimited #footer-container.yt-base-gutter {
+  min-width: 920px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#watch7-content {
+  width: 80vw;
+}
+
+#watch7-sidebar {
+  margin-left: calc(80vw + 15px);
+}
+
+body > #body-container {
+  max-width: 980px;
+}
+
+#yt-masthead-container {
+  max-width: 740px;
+}

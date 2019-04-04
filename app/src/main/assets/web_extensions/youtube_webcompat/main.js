@@ -10,11 +10,11 @@
     }
   });
 
-  // const playerEl = document.getElementById('movie_player');
-  // if (!playerEl) {
-  //   return;
-  // }
-  //
+  const playerEl = document.getElementById('movie_player');
+  if (!playerEl) {
+    return;
+  }
+
   // let script = document.head.querySelector('script[id="content-script"]');
   // if (!script) {
   //   script = document.createElement('script');
