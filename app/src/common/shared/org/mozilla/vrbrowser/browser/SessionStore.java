@@ -1042,7 +1042,7 @@ public class SessionStore implements ContentBlocking.Delegate, GeckoSession.Navi
     private String checkYoutubeOverride(String aUri) {
         try {
             Uri uri = Uri.parse(aUri);
-            String hostLower = !uri.getHost().toLowerCase();
+            String hostLower = uri.getHost().toLowerCase();
             if (!hostLower.endsWith(".youtube.com") &&
                 !hostLower.endsWith(".youtube-nocookie.com")) {
                 return null;
