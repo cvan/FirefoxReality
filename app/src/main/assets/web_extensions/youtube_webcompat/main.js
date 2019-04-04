@@ -15,26 +15,56 @@
     return;
   }
 
+  const qs = new URLSearchParams(window.location.search);
+  function getTruthyQS (key) {
+    if (!qs) {
+      return false;
+    }
+    const value = qs.get(key);
+
+    if (qs.has(key) && !value) {
+      return true;
+    }
+
+    const valueLower = (value || '').trim().toLowerCase();
+    return valueLower === '1' || valueLower === 'true' || valueLower === 'yes' || valueLower === 'on';
+  }
+
   var prefs = {
     hd: false,
     once: false,
     higher: false,
-    quality: 'hd1440',
+    quality: 'tiny',
     log: true,
     qualityLabels: {
-      4320: 'highres', // 8K / 4320p / QUHD
-      2880: 'hd2880', // 5K / 2880p / UHD+
-      2160: 'hd2160', // 4K / 2160p / UHD
-      1440: 'hd1440', // 1440p / QHD
-      1080: 'hd1080', // 1080p / FHD
-      720: 'hd720', // 720p / HD
-      480: 'large', // 480p
-      360: 'medium', // 360p
-      240: 'small', // 240p
-      144: 'tiny', // 144p
-      0: 'auto'
+      '4320': 'highres', // 8K / 4320p / QUHD
+      '2880': 'hd2880', // 5K / 2880p / UHD+
+      '2160': 'hd2160', // 4K / 2160p / UHD
+      '1440': 'hd1440', // 1440p / QHD
+      '1080': 'hd1080', // 1080p / FHD
+      '720': 'hd720', // 720p / HD
+      '480': 'large', // 480p
+      '360': 'medium', // 360p
+      '240': 'small', // 240p
+      '144': 'tiny', // 144p
+      '0': 'auto'
     }
   };
+
+  const qsQuality = (qs.get('vq') || qs.get('quality') || '').trim().toLowerCase();
+  if (qsQuality) {
+    if (qsQuality === 'auto' || qsQuality === 'default') {
+      prefs.quality = 'auto';
+    } else if (qsQuality in prefs.qualityLabels) {
+      prefs.quality = prefs.qualityLabels[qsQuality];
+    } else {
+      const qsQualityNumber = parseInt(qsQuality, 10);
+      if (Number.isInteger(qsQualityNumber)) {
+        prefs.quality = qsQualityNumber;
+      }
+    }
+  }
+
   var script = document.createElement('script');
   Object.assign(script.dataset, prefs);
   delete script.dataset.qualityLabels;
