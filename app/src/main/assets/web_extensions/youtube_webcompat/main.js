@@ -15,19 +15,11 @@
     return;
   }
 
-  // let script = document.head.querySelector('script[id="content-script"]');
-  // if (!script) {
-  //   script = document.createElement('script');
-  //   script.id = 'content-script';
-  //   script.src = 'https://cvan.ngrok.io/content-script.js';
-  //   document.head.appendChild(script);
-  // }
-
   var prefs = {
     hd: false,
     once: false,
     higher: false,
-    quality: 144,
+    quality: 'hd1440',
     log: true,
     qualityLabels: {
       4320: 'highres', // 8K / 4320p / QUHD
@@ -47,15 +39,12 @@
   Object.assign(script.dataset, prefs);
   delete script.dataset.qualityLabels;
   script.setAttribute('data-quality-labels', JSON.stringify(prefs.qualityLabels));
-  console.log('script', script.dataset);
   script.textContent = `
     var yttools = window.yttools || [];
-    console.log('script executed', yttools);
     function youtubeHDListener (e) {
-      console.log('youtubeHDListener');
       const prefs = youtubeHDListener.prefs;
       const player = youtubeHDListener.player;
-      const log = (...args) => prefs.log === 'true' && console.log('YouTube HD::', ...args);
+      const log = (...args) => prefs.log === 'true' && console.log('[ythd]', ...args);
 
       try {
         if (e === 1 && player) {
@@ -67,7 +56,6 @@
             'highres', 'h2880', 'hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small', 'tiny', 'auto'
           ];
           const q = player.getPlaybackQuality();
-          console.log('≥≥≥……… prefs', prefs);
           if (prefs.quality in prefs.qualityLabels) {
             prefs.quality = prefs.qualityLabels[String(prefs.quality)];
           }
@@ -88,12 +76,10 @@
           if (prefs.higher === 'true' && compare(q, prefs.quality)) {
             return log('Quality was', q, 'which is higher than ', prefs.quality, 'Changing the quality is skipped');
           }
-          console.info('q', player.getPlaybackQuality(), 'prefs.quality', prefs.quality);
           if (q === prefs.quality) {
             return log('Selected quality is okay;', q);
           }
           const find = increase => {
-            console.log('≥ find', levels);
             if (prefs.quality === 'highest') {
               return levels[0];
             }
@@ -121,21 +107,18 @@
           }
           log('Quality was', q, 'Quality is set to', nq);
         }
-      }
-      catch (e) {
-        console.error('error', e);
-        log(e);
+      } catch (eerr) {
+        log(err);
       }
     }
     youtubeHDListener.prefs = document.currentScript.dataset;
     youtubeHDListener.prefs.qualityLabels = JSON.parse(document.currentScript.getAttribute('data-quality-labels') || '{}');
-    console.log(youtubeHDListener.prefs.qualityLabels)
     yttools.push(e => {
       youtubeHDListener.player = e;
       youtubeHDListener(1);
       e.addEventListener('onStateChange', 'youtubeHDListener');
     });
-    // install listener
+    // Install listener.
     function onYouTubePlayerReady (e) {
       console.log('onYouTubePlayerReady', yttools);
       yttools.forEach(c => {
@@ -146,9 +129,8 @@
         }
       });
     }
-    // https://youtube.github.io/spfjs/documentation/events/
+    // See docs: https://youtube.github.io/spfjs/documentation/events/
     window.addEventListener('spfready', () => {
-      console.log('spfready');
       if (typeof window.ytplayer === 'object' && window.ytplayer.config) {
         window.ytplayer.config.args.jsapicallback = 'onYouTubePlayerReady';
       }
