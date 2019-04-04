@@ -1,276 +1,159 @@
 (function () {
   // If missing, inject a `<meta name="viewport">` tag to trigger YouTube's mobile layout.
-  const viewport = document.head.querySelector('meta[name="viewport"]');
-  if (!viewport) {
-    viewport = document.createElement('meta');
-    viewport.name = 'viewport';
-    viewport.content = 'width=user-width, initial-scale=1';
-    document.head.appendChild(viewport);
-  }
-
-  const playerEl = document.getElementById('movie_player');
-  if (!playerEl) {
-    return;
-  }
-
-  const LOGTAG = '[firefox-reality] ';
-  const YOUTUBE_DEFAULT_QUALITY = 1440;
-
-  class YouTubeImprover {
-    constructor ({
-      supportedQualities = [
-        4320,
-        2880,
-        2160,
-        1440,
-        1080,
-        720,
-        480,
-        360,
-        240,
-        144
-      ],
-      defaultQuality = YOUTUBE_DEFAULT_QUALITY,
-      qualityLabels = {
-        4320: 'highres', // 8K / 4320p / QUHD
-        2880: 'hd2880', // 5K / 2880p / UHD+
-        2160: 'hd2160', // 4K / 2160p / UHD
-        1440: 'hd1440', // 1440p / QHD
-        1080: 'hd1080', // 1080p / FHD
-        720: 'hd720', // 720p / HD
-        480: 'large', // 480p
-        360: 'medium', // 360p
-        240: 'small', // 240p
-        144: 'tiny', // 144p
-        0: 'auto'
-      },
-      ignoreDefault = false
-    },
-    win = window,
-    doc = document
-  ) {
-      this.qualitySizes = {};
-      this.qualityLabels = qualityLabels;
-      this.ignoreDefault = ignoreDefault;
-      this.win = win;
-      this.doc = doc;
-
-      supportedQualities.forEach(size => {
-        this.qualitySizes[qualityLabels[size]] = size;
-      });
-
-      this.defaultQuality = this.parseQuality(defaultQuality);
-      console.log('defaultQuality', defaultQuality);
-
-      this.playerEl = this.doc.getElementById('movie_player');
-      if (!this.playerEl) {
-        return;
-      }
+  window.addEventListener('load', () => {
+    let viewport = document.head.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      viewport = document.createElement('meta');
+      viewport.name = 'viewport';
+      viewport.content = 'width=device-width, initial-scale=1';
+      document.head.appendChild(viewport);
     }
+  });
 
-    getDesiredIndexFromQualityChoices (choices, desiredQuality) {
-      desiredQuality = this.parseQuality(desiredQuality);
+  // const playerEl = document.getElementById('movie_player');
+  // if (!playerEl) {
+  //   return;
+  // }
+  //
+  // let script = document.head.querySelector('script[id="content-script"]');
+  // if (!script) {
+  //   script = document.createElement('script');
+  //   script.id = 'content-script';
+  //   script.src = 'https://cvan.ngrok.io/content-script.js';
+  //   document.head.appendChild(script);
+  // }
 
-      if (this.ignoreDefault) {
-        return choices.findIndex(size => size === desiredQuality);
-      }
-
-      // If the desired quality is not available, use the next best one.
-      let bestChoice = null;
-      choices.reverse().forEach(size => {
-        if (size >= desiredQuality && size >= bestChoice) {
-          bestChoice = size;
-        }
-      });
-      return choices.indexOf(bestChoice);
+  var prefs = {
+    hd: false,
+    once: false,
+    higher: false,
+    quality: 144,
+    log: true,
+    qualityLabels: {
+      4320: 'highres', // 8K / 4320p / QUHD
+      2880: 'hd2880', // 5K / 2880p / UHD+
+      2160: 'hd2160', // 4K / 2160p / UHD
+      1440: 'hd1440', // 1440p / QHD
+      1080: 'hd1080', // 1080p / FHD
+      720: 'hd720', // 720p / HD
+      480: 'large', // 480p
+      360: 'medium', // 360p
+      240: 'small', // 240p
+      144: 'tiny', // 144p
+      0: 'auto'
     }
-
-    get currentQuality () {
-      if (!this.playerEl) {
-        return null;
-      }
-
-      return this.parseQuality(this.playerEl.getPlaybackQuality());
-    }
-
-    get currentQualityLabel () {
-      if (!this.playerEl) {
-        return null;
-      }
-
-      return this.playerEl.getPlaybackQuality();
-    }
-
-    parseQuality (value) {
-      const valuePassed = value;
-
-      value = parseInt(value, 10);
-      if (!Number.isInteger(value)) {
-        if (valuePassed === String(value) && !(value in this.qualityLabels)) {
-          throw new Error(`Invalid quality: ${valuePassed}"; supported choices: ${Object.keys(this.qualityLabels)}`);
-        }
-
-        if (typeof value === 'string') {
-          value = value.toLowerCase().trim();
-
-          if (value === 'default' || value === 'original') {
-            value = 'auto';
-          }
-          if (value === 'auto') {
-            return 0;
-          }
-
-          if (!(value in this.qualitySizes)) {
-            throw new Error(`Invalid quality: "${valuePassed}"; supported choices: ${Object.keys(this.qualitySizes).join(', ')}`);
-          }
-
-          return this.qualityLabels[value];
-        }
-      }
-
-      return value;
-    }
-
-    getQualitySerialised (quality) {
-      const creation = Date.now();
-
-      return JSON.stringify({
-        creation,
-        data: this.qualitySizes[quality],
-        expiration: creation + 2592e6
-      });
-    }
-
-    set quality (value) {
-      if (!this.playerEl) {
-        return false;
-      }
-
-      let currentQuality = this.currentQuality;
-      let currentQualityLabel = this.currentQualityLabel;
-
-      let desiredQuality = this.parseQuality(value);
-      let desiredQualityLabel = this.qualityLabels[desiredQuality];
-
-      if (typeof desiredQuality === 'undefined') {
-        value = this.defaultQuality;
-      }
-
-      if (desiredQuality === 0) {
-        // Open the `Settings` menu.
-        console.log(`${LOGTAG}Opened video "Settings" menu`);
-        this.doc.querySelector('ytp-settings-button, .ytp-settings-button').click();
-
-        // Select the `Quality` sub-menu.
-        console.log(`${LOGTAG}Opened video "Quality" sub-menu`);
-        this.doc.querySelector('ytp-settings-menu ytp-menuitem:last-child, .ytp-settings-menu .ytp-menuitem:last-child').click();
-
-        const autoQualityEl = this.doc.querySelector(`ytp-quality-menu ytp-menuitem:first-child, .ytp-quality-menu .ytp-menuitem:last-child`);
-        autoQualityEl.click();
-
-        console.log(`${LOGTAG}Changed video quality to "Auto"`);
-
-        return true;
-      }
-
-      if (desiredQuality === currentQuality) {
-        console.log(`${LOGTAG}Quality is already playing at "${currentQualityLabel}" (requested "${desiredQualityLabel}")`);
-        return;
-      }
-
-      const availableSizes = this.playerEl.getAvailableQualityLevels();
-      console.info(`${LOGTAG}Available quality levels:`, availableSizes);
+  };
+  var script = document.createElement('script');
+  Object.assign(script.dataset, prefs);
+  delete script.dataset.qualityLabels;
+  script.setAttribute('data-quality-labels', JSON.stringify(prefs.qualityLabels));
+  console.log('script', script.dataset);
+  script.textContent = `
+    var yttools = window.yttools || [];
+    console.log('script executed', yttools);
+    function youtubeHDListener (e) {
+      console.log('youtubeHDListener');
+      const prefs = youtubeHDListener.prefs;
+      const player = youtubeHDListener.player;
+      const log = (...args) => prefs.log === 'true' && console.log('YouTube HD::', ...args);
 
       try {
-        localStorage.setItem('yt-player-quality', this.getQualitySerialised(desiredQuality));
-      } catch (err) {
-        console.warn(`Could not set "yt-player-quality" in Local Storage`);
+        if (e === 1 && player) {
+          const levels = player.getAvailableQualityLevels();
+          if (levels.length === 0) {
+            return log('getAvailableQualityLevels returned empty array');
+          }
+          const qualities = [
+            'highres', 'h2880', 'hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small', 'tiny', 'auto'
+          ];
+          const q = player.getPlaybackQuality();
+          console.log('≥≥≥……… prefs', prefs);
+          if (prefs.quality in prefs.qualityLabels) {
+            prefs.quality = prefs.qualityLabels[String(prefs.quality)];
+          }
+          if ((q.startsWith('h') && prefs.quality.startsWith('h')) && prefs.hd === 'true') {
+            return log('Quality was', q, 'Changing the quality is skipped');
+          }
+          const compare = (q1, q2) => {
+            if (q2 === 'auto') {
+              return false;
+            }
+            const i1 = qualities.indexOf(q1);
+            const i2 = qualities.indexOf(q2);
+            if (i1 === -1 || i2 === -1) {
+              return false;
+            }
+            return i1 - i2 <= 0;
+          };
+          if (prefs.higher === 'true' && compare(q, prefs.quality)) {
+            return log('Quality was', q, 'which is higher than ', prefs.quality, 'Changing the quality is skipped');
+          }
+          console.info('q', player.getPlaybackQuality(), 'prefs.quality', prefs.quality);
+          if (q === prefs.quality) {
+            return log('Selected quality is okay;', q);
+          }
+          const find = increase => {
+            console.log('≥ find', levels);
+            if (prefs.quality === 'highest') {
+              return levels[0];
+            }
+            if (increase) {
+              prefs.quality = qualities[qualities.indexOf(prefs.quality) - 1] || levels[0];
+            }
+            const index = levels.indexOf(prefs.quality);
+            if (index !== -1) {
+              return prefs.quality;
+            }
+            return find(true);
+          };
+          const nq = find();
+          if (q === nq) {
+            return log('Quality was', q, 'no better quality', 'Changing the quality is skipped');
+          }
+          player.setPlaybackQuality(nq);
+          try {
+            player.setPlaybackQualityRange(nq, nq);
+          } catch (e) {}
+          if (prefs.once === 'true') {
+            player.removeEventListener('onStateChange', 'youtubeHDListener');
+            window.youtubeHDListener = () => {};
+            log('Removing Listener');
+          }
+          log('Quality was', q, 'Quality is set to', nq);
+        }
       }
-
-      const pressButtons = () => {
-        // Open the `Settings` menu.
-        const settingsButtonEl = this.doc.querySelector('ytp-settings-button, .ytp-settings-button');
-        if (!settingsButtonEl) {
-          return;
-        }
-        console.log(`${LOGTAG}Opened video "Settings" menu`);
-        settingsButtonEl.click();
-
-        let settingsEl = this.doc.querySelector('ytp-settings-shown, .ytp-settings-shown');
-        if (settingsEl) {
-          settingsEl.classList.remove('ytp-settings-shown');
-        }
-
-        // Click on the row for the new quality.
-        const qualityButtonEl = this.doc.querySelector('ytp-settings-menu ytp-menuitem:last-child, .ytp-settings-menu .ytp-menuitem:last-child');
-        if (!qualityButtonEl) {
-          return;
-        }
-        console.log(`${LOGTAG}Opened video "Quality" sub-menu`);
-        qualityButtonEl.click();
-
-        settingsEl = this.doc.querySelector('ytp-settings-shown, .ytp-settings-shown');
-        if (settingsEl) {
-          settingsEl.classList.remove('ytp-settings-shown');
-        }
-
-        // Select the best `Quality`.
-        // NOTE: The best quality is always the first item in the `Quality` list.
-        //       See below for how to cross-reference the `ytp-menuitem` rows with the shortnames -
-        //       because there are no classes or identifiers in the DOM to query for.)
-        const newQualityIdx = this.getDesiredIndexFromQualityChoices(availableSizes.map(label => this.qualitySizes[label]), desiredQuality);
-
-        const changeQuality = () => {
-          const newQualityEl = this.doc.querySelector(`ytp-quality-menu [role="menuitemradio"]:nth-child(${newQualityIdx + 1}), .ytp-quality-menu [role="menuitemradio"]:nth-child(${newQualityIdx +1})`);
-          console.info(`newQualityEl`, newQualityEl);
-
-          if (!newQualityEl) {
-            return;
-          }
-
-          newQualityEl.click();
-          console.log(`${LOGTAG}Changed video quality to "${newQualityEl.textContent}" ("${this.qualityLabel}")`);
-
-          settingsEl = this.doc.querySelector('ytp-settings-shown, .ytp-settings-shown');
-          if (settingsEl) {
-            settingsEl.classList.remove('ytp-settings-shown');
-          }
-
-          // Dismiss the `Settings` menu.
-          document.querySelector('.ytp-chrome-controls, body').click();
-        };
-
-        const skipAdInterval = this.win.setInterval(() => {
-          const skipAdButtonEl = this.doc.querySelector('.ytp-ad-skip-button');
-          if (!skipAdButtonEl) {
-            this.win.clearInterval(skipAdInterval);
-            changeQuality();
-            return;
-          }
-
-          skipAdButtonEl.click();
-          this.playerEl.click();
-        }, 500);
-      };
-
-      pressButtons();
-
-      return true;
+      catch (e) {
+        console.error('error', e);
+        log(e);
+      }
     }
-  }
-
-  const qs = window.URLSearchParams && new window.URLSearchParams(window.location.search);
-
-  let desiredQuality = qs && (qs.get('vq') || qs.get('quality') || '').trim().toLowerCase();
-
-  if (desiredQuality) {
-    new YouTubeImprover({
-      defaultQuality: desiredQuality,
-      ignoreDefault: true
+    youtubeHDListener.prefs = document.currentScript.dataset;
+    youtubeHDListener.prefs.qualityLabels = JSON.parse(document.currentScript.getAttribute('data-quality-labels') || '{}');
+    console.log(youtubeHDListener.prefs.qualityLabels)
+    yttools.push(e => {
+      youtubeHDListener.player = e;
+      youtubeHDListener(1);
+      e.addEventListener('onStateChange', 'youtubeHDListener');
     });
-  } else {
-    new YouTubeImprover({
-      defaultQuality: YOUTUBE_DEFAULT_QUALITY
+    // install listener
+    function onYouTubePlayerReady (e) {
+      console.log('onYouTubePlayerReady', yttools);
+      yttools.forEach(c => {
+        try {
+          c(e);
+        } catch (e) {
+          console.error('err',e);
+        }
+      });
+    }
+    // https://youtube.github.io/spfjs/documentation/events/
+    window.addEventListener('spfready', () => {
+      console.log('spfready');
+      if (typeof window.ytplayer === 'object' && window.ytplayer.config) {
+        window.ytplayer.config.args.jsapicallback = 'onYouTubePlayerReady';
+      }
     });
-  }
+  `;
+  document.documentElement.appendChild(script);
+  // script.remove();
 })();
