@@ -3,9 +3,6 @@
   "name": "FirefoxRealityYouTubeWebCompat",
   "version": "1.0",
   "description": "YouTube web-site compatability fixes for Firefox Reality.",
-  "permissions": [
-    "<all_urls>"
-  ],
   "content_scripts": [
     {
       "matches": [
