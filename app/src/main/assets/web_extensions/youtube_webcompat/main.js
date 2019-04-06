@@ -1,4 +1,4 @@
-(function () {
+// (function () {
   // If missing, inject a `<meta name="viewport">` tag to trigger YouTube's mobile layout.
   window.addEventListener('load', () => {
     let viewport = document.head.querySelector('meta[name="viewport"]');
@@ -10,33 +10,84 @@
     }
   });
 
-  const playerEl = document.getElementById('movie_player');
-  if (!playerEl) {
-    return;
-  }
+var script = document.createElement('script');
+Object.assign(script.dataset, prefs);
+script.textContent = `
+  //const
+  LOGTAG = '[firefoxreality:webcompat]';
 
-  const qs = new URLSearchParams(window.location.search);
+  //const
+  qs = new URLSearchParams(window.location.search);
   function getTruthyQS (key) {
-    if (!qs) {
+    if (!qs || !qs.has(key)) {
       return false;
     }
-    const value = qs.get(key);
-
-    if (qs.has(key) && !value) {
-      return true;
-    }
-
-    const valueLower = (value || '').trim().toLowerCase();
-    return valueLower === '1' || valueLower === 'true' || valueLower === 'yes' || valueLower === 'on';
+    //const
+    valueLower = (qs.get('key') || '').trim().toLowerCase();
+    return valueLower === '' || valueLower === '1' || valueLower === 'true' || valueLower === 'yes' || valueLower === 'on';
   }
 
-  var prefs = {
+  //const
+  prefs = {
     hd: false,
-    once: false,
-    higher: false,
-    quality: 'tiny',
-    log: true,
-    qualityLabels: {
+    quality: 1440,
+    log: qs.get('mozDebug') ? getTruthyQS('mozDebug') : true,
+    retryAttempts: parseInt(qs.get('retryAttempts') || qs.get('retryattempts') || '3', 10),
+    retryTimeout: parseInt(qs.get('retryTimeout') || qs.get('retrytimeout') || '500', 10)
+  };
+
+  //const
+  printLog = String(prefs.log) === 'true';
+
+  //const
+  log = (...args) => printLog && console.log(LOGTAG, ...args);
+  //const
+  logError = (...args) => printLog && console.error(LOGTAG, ...args);
+
+  //let
+  retryTimeout = null;
+
+  const ytImprover = window.ytImprover = (state, attempts) => {
+    console.log('••• ytImprover', state, attempts);
+
+    if (ytImprover.completed) {
+      return;
+    }
+
+    if (typeof attempts === 'undefined') {
+      attempts = 1;
+    }
+    if (attempts >= prefs.retryAttempts) {
+      return;
+    }
+
+    //const
+    player = document.getElementById('movie_player');
+    if (state !== 1 || !player) {
+      attempts++;
+      retryTimeout = setTimeout(() => {
+        ytImprover(state, attempts);
+      }, prefs.retryInterval);
+      return;
+    }
+
+    //const
+    levels = player.getAvailableQualityLevels();
+    if (!levels || !levels.length) {
+      console.log('no levels', levels);
+      return;
+      // return log('Cannot read \`<moviePlayer>.getAvailableQualityLevels\`');
+    }
+
+    clearTimeout(retryTimeout);
+    ytImprover.completed = true;
+
+    //const
+    prefs.qualities = [
+      'highres', 'h2880', 'hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small', 'tiny', 'auto'
+    ];
+    //const
+    prefs.qualityLabels = {
       '4320': 'highres', // 8K / 4320p / QUHD
       '2880': 'hd2880', // 5K / 2880p / UHD+
       '2160': 'hd2160', // 4K / 2160p / UHD
@@ -48,124 +99,121 @@
       '240': 'small', // 240p
       '144': 'tiny', // 144p
       '0': 'auto'
+    };
+
+    const getDesiredQuality = () => {
+      //const
+      qsQuality = (qs.get('vq') || qs.get('quality') || '').trim().toLowerCase();
+      if (qsQuality) {
+        if (qsQuality in prefs.qualityLabels) {
+          prefs.quality = prefs.qualityLabels[qsQuality];
+        } else {
+          //const
+          qsQualityNumber = parseInt(qsQuality, 10);
+          if (Number.isInteger(qsQualityNumber)) {
+            prefs.quality = qsQualityNumber;
+          } else {
+            prefs.quality = qsQuality;
+          }
+        }
+      }
+      prefs.quality = String(prefs.quality).toLowerCase();
+      if (qsQuality === 'auto' || qsQuality === 'default') {
+        prefs.quality = 'auto';
+      }
+      if (prefs.quality in prefs.qualityLabels) {
+        prefs.quality = prefs.qualityLabels[prefs.quality];
+      }
+      return prefs.quality;
+    };
+
+    prefs.quality = getDesiredQuality();
+    if (prefs.quality === 'auto') {
+      return log(\`Desired quality is fine (${prefs.quality})\`);
     }
+
+    //const
+    currentQuality = player.getPlaybackQuality();
+    if (prefs.quality === currentQuality) {
+      return log(\`Current quality is desired quality (${currentQuality})\`);
+    }
+
+    // if ((q.startsWith('h') && prefs.quality.startsWith('h')) && prefs.hd === 'true') {
+    //   return log('Quality was', q, 'Changing the quality is skipped');
+    // }
+
+    console.log('levels', levels);
+
+    //const
+    findBestQuality = increase => {
+      if (prefs.quality === 'highest' || prefs.quality === 'best' || prefs.quality === 'max' || prefs.quality === 'maximum') {
+        return levels[0];
+      }
+      if (prefs.quality === 'lowest' || prefs.quality === 'worst' || prefs.quality === 'min' || prefs.quality === 'minimum') {
+        return levels[levels.length - 1];
+      }
+      if (increase) {
+        prefs.quality = prefs.qualities[prefs.qualities.indexOf(prefs.quality) - 1] || levels[0];
+      }
+      //const
+      index = levels.indexOf(prefs.quality);
+      if (index !== -1) {
+        return prefs.quality;
+      }
+      return findBestQuality(true);
+    };
+    //const
+    newBestQuality = findBestQuality();
+    if (currentQuality === newBestQuality) {
+      return log(\`Current quality "${currentQuality}" is the best available quality\`);
+    }
+
+    window.ytp = player;
+
+    if (!player.setPlaybackQuality) {
+      logError('\`player.setPlaybackQuality\` not available');
+      return;
+    }
+    player.setPlaybackQuality(newBestQuality);
+
+    if (!player.setPlaybackQualityRange) {
+      logError('\`player.setPlaybackQualityRange\` not available');
+      return;
+    }
+    try {
+      player.setPlaybackQualityRange(newBestQuality, newBestQuality);
+    } catch (e) {
+    }
+    log(\`Changed quality from "${currentQuality}" to "${newBestQuality}"\`);
   };
 
-  const qsQuality = (qs.get('vq') || qs.get('quality') || '').trim().toLowerCase();
-  if (qsQuality) {
-    if (qsQuality === 'auto' || qsQuality === 'default') {
-      prefs.quality = 'auto';
-    } else if (qsQuality in prefs.qualityLabels) {
-      prefs.quality = prefs.qualityLabels[qsQuality];
-    } else {
-      const qsQualityNumber = parseInt(qsQuality, 10);
-      if (Number.isInteger(qsQualityNumber)) {
-        prefs.quality = qsQualityNumber;
-      }
-    }
-  }
+  if (window.location.pathname.startsWith('/watch')) {
+    const onYouTubePlayerReady = window.onYouTubePlayerReady = evt => {
+      console.log('onYouTubePlayerReady');
+      window.ytImprover(1);
+      evt.addEventListener('onStateChange', 'ytImprover');
+    };
 
-  var script = document.createElement('script');
-  Object.assign(script.dataset, prefs);
-  delete script.dataset.qualityLabels;
-  script.setAttribute('data-quality-labels', JSON.stringify(prefs.qualityLabels));
-  script.textContent = `
-    var yttools = window.yttools || [];
-    function youtubeHDListener (e) {
-      const prefs = youtubeHDListener.prefs;
-      const player = youtubeHDListener.player;
-      const log = (...args) => prefs.log === 'true' && console.log('[ythd]', ...args);
-
-      try {
-        if (e === 1 && player) {
-          const levels = player.getAvailableQualityLevels();
-          if (levels.length === 0) {
-            return log('getAvailableQualityLevels returned empty array');
-          }
-          const qualities = [
-            'highres', 'h2880', 'hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small', 'tiny', 'auto'
-          ];
-          const q = player.getPlaybackQuality();
-          if (prefs.quality in prefs.qualityLabels) {
-            prefs.quality = prefs.qualityLabels[String(prefs.quality)];
-          }
-          if ((q.startsWith('h') && prefs.quality.startsWith('h')) && prefs.hd === 'true') {
-            return log('Quality was', q, 'Changing the quality is skipped');
-          }
-          const compare = (q1, q2) => {
-            if (q2 === 'auto') {
-              return false;
-            }
-            const i1 = qualities.indexOf(q1);
-            const i2 = qualities.indexOf(q2);
-            if (i1 === -1 || i2 === -1) {
-              return false;
-            }
-            return i1 - i2 <= 0;
-          };
-          if (prefs.higher === 'true' && compare(q, prefs.quality)) {
-            return log('Quality was', q, 'which is higher than ', prefs.quality, 'Changing the quality is skipped');
-          }
-          if (q === prefs.quality) {
-            return log('Selected quality is okay;', q);
-          }
-          const find = increase => {
-            if (prefs.quality === 'highest') {
-              return levels[0];
-            }
-            if (increase) {
-              prefs.quality = qualities[qualities.indexOf(prefs.quality) - 1] || levels[0];
-            }
-            const index = levels.indexOf(prefs.quality);
-            if (index !== -1) {
-              return prefs.quality;
-            }
-            return find(true);
-          };
-          const nq = find();
-          if (q === nq) {
-            return log('Quality was', q, 'no better quality', 'Changing the quality is skipped');
-          }
-          player.setPlaybackQuality(nq);
-          try {
-            player.setPlaybackQualityRange(nq, nq);
-          } catch (e) {}
-          if (prefs.once === 'true') {
-            player.removeEventListener('onStateChange', 'youtubeHDListener');
-            window.youtubeHDListener = () => {};
-            log('Removing Listener');
-          }
-          log('Quality was', q, 'Quality is set to', nq);
-        }
-      } catch (eerr) {
-        log(err);
-      }
-    }
-    youtubeHDListener.prefs = document.currentScript.dataset;
-    youtubeHDListener.prefs.qualityLabels = JSON.parse(document.currentScript.getAttribute('data-quality-labels') || '{}');
-    yttools.push(e => {
-      youtubeHDListener.player = e;
-      youtubeHDListener(1);
-      e.addEventListener('onStateChange', 'youtubeHDListener');
-    });
-    // Install listener.
-    function onYouTubePlayerReady (e) {
-      console.log('onYouTubePlayerReady', yttools);
-      yttools.forEach(c => {
-        try {
-          c(e);
-        } catch (e) {
-          console.error('err',e);
-        }
-      });
-    }
-    // See docs: https://youtube.github.io/spfjs/documentation/events/
     window.addEventListener('spfready', () => {
+      console.log('spfready');
       if (typeof window.ytplayer === 'object' && window.ytplayer.config) {
+        console.log('set jsapicallback');
         window.ytplayer.config.args.jsapicallback = 'onYouTubePlayerReady';
       }
     });
-  `;
-  document.documentElement.appendChild(script);
-  // script.remove();
-})();
+
+    window.addEventListener('spfdone', () => {
+      console.log('spfdone');
+      if (typeof window.ytplayer === 'object' && window.ytplayer.config) {
+        console.log('set jsapicallback');
+        window.ytplayer.config.args.jsapicallback = 'onYouTubePlayerReady';
+      }
+    });
+
+    ytImprover(1);
+  }
+`;
+document.documentElement.appendChild(script);
+script.remove();
+
+// })();
