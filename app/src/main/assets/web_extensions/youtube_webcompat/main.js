@@ -10,7 +10,7 @@
     }
   });
 
-  const LOGTAG = '[firefoxreality:webcompat]'
+  const LOGTAG = '[firefoxreality:webcompat]';
   const qs = new URLSearchParams(window.location.search);
   let retryTimeout = null;
 
@@ -53,7 +53,7 @@
       attempts++;
       retryTimeout = setTimeout(() => {
         ytImprover(state, attempts);
-      }, prefs.retryInterval);
+      }, prefs.retryTimeout);
       return;
     }
 
@@ -85,29 +85,19 @@
 
     const getDesiredQuality = () => {
       const qsQuality = (qs.get('vq') || qs.get('quality') || '').trim().toLowerCase();
-      if (qsQuality) {
-        if (qsQuality in prefs.qualityLabels) {
-          prefs.quality = prefs.qualityLabels[qsQuality];
-        } else {
-          const qsQualityNumber = parseInt(qsQuality, 10);
-          if (Number.isInteger(qsQualityNumber)) {
-            prefs.quality = qsQualityNumber;
-          } else {
-            prefs.quality = qsQuality;
-          }
-        }
+      if (qsQuality && !(qsQuality in prefs.qualityLabels)) {
+        const qsQualityNumber = parseInt(qsQuality, 10);
+        prefs.quality = qsQualityNumber ? Number.isInteger(qsQualityNumber) : qsQuality;
       }
       prefs.quality = String(prefs.quality).toLowerCase();
       if (qsQuality === 'auto' || qsQuality === 'default') {
         prefs.quality = 'auto';
       }
-      if (prefs.quality in prefs.qualityLabels) {
-        prefs.quality = prefs.qualityLabels[prefs.quality];
-      }
-      return prefs.quality;
+      return prefs.quality in prefs.qualityLabels ? prefs.qualityLabels[prefs.quality] : prefs.quality;
     };
 
     prefs.quality = getDesiredQuality();
+    console.log('prefs.quality', prefs.quality);
     if (prefs.quality === 'auto') {
       return log(`Desired quality is fine (${prefs.quality})`);
     }
