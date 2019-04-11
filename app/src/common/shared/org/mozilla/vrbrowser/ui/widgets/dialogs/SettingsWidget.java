@@ -57,8 +57,30 @@ public class SettingsWidget extends UIWidget implements WidgetManagerDelegate.Fo
 
         private boolean mIsHash;
 
+        // @Override
+        // public boolean onSingleTapUp(MotionEvent e) {
+        //     Log.e(LOGTAG, "__verbose__ onLongPress: mIsHash=" + mIsHash+ "; BuildConfig.GIT_HASH=" + BuildConfig.GIT_HASH + "; BuildConfig.VERSION_CODE=" + BuildConfig.VERSION_CODE);
+        //
+        //     if (mIsHash)
+        //         mBuildText.setText(versionCodeToDate(BuildConfig.VERSION_CODE));
+        //     else
+        //         mBuildText.setText(BuildConfig.GIT_HASH);
+        //
+        //     mIsHash = !mIsHash;
+        //
+        //     return true;
+        // }
+
         @Override
-        public boolean onDoubleTap(MotionEvent event) {
+        public boolean onDown(MotionEvent e) {
+            Log.e(LOGTAG, "__verbose__ [1] onDown: mIsHash=" + mIsHash+ "; BuildConfig.GIT_HASH=" + BuildConfig.GIT_HASH + "; BuildConfig.VERSION_CODE=" + BuildConfig.VERSION_CODE);
+            return true;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            Log.e(LOGTAG, "__verbose__ [1] onLongPress: mIsHash=" + mIsHash+ "; BuildConfig.GIT_HASH=" + BuildConfig.GIT_HASH + "; BuildConfig.VERSION_CODE=" + BuildConfig.VERSION_CODE);
+
             if (mIsHash)
                 mBuildText.setText(versionCodeToDate(BuildConfig.VERSION_CODE));
             else
@@ -66,11 +88,6 @@ public class SettingsWidget extends UIWidget implements WidgetManagerDelegate.Fo
 
             mIsHash = !mIsHash;
 
-            return true;
-        }
-
-        @Override
-        public boolean onDown(MotionEvent e) {
             return true;
         }
     }
