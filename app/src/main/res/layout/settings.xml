@@ -9,10 +9,12 @@
         android:background="@drawable/settings_background"
         android:orientation="vertical">
 
-        <LinearLayout
+        <RelativeLayout
+            android:id="@+id/settingsLogoLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:background="@color/azure"
             android:orientation="vertical">
 
             <ImageView
@@ -25,19 +27,26 @@
                 android:layout_marginTop="40dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ff_logo_settings" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/versionLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="5dp"
+            android:background="@color/white">
 
             <TextView
                 android:id="@+id/versionText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/ff_logo_settings"
                 android:layout_centerHorizontal="true"
                 android:layout_gravity="center"
-                android:layout_marginTop="5dp"
                 android:fontFamily="sans-serif"
                 android:gravity="center"
                 android:text="@string/settings_version"
-                android:textColor="@color/white"
+                android:textColor="@color/ocean"
                 android:textSize="@dimen/text_smaller_size" />
 
             <TextView
@@ -51,9 +60,10 @@
                 android:fontFamily="sans-serif"
                 android:gravity="center"
                 android:text="@string/settings_version_developer"
-                android:textColor="@color/white"
+                android:textColor="@color/ocean"
                 android:textSize="@dimen/text_smaller_size" />
-        </LinearLayout>
+
+        </RelativeLayout>
 
         <ScrollView
             android:layout_width="wrap_content"

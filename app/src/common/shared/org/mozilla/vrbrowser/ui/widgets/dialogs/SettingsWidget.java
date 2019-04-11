@@ -57,29 +57,15 @@ public class SettingsWidget extends UIWidget implements WidgetManagerDelegate.Fo
 
         private boolean mIsHash;
 
-        // @Override
-        // public boolean onSingleTapUp(MotionEvent e) {
-        //     Log.e(LOGTAG, "__verbose__ onLongPress: mIsHash=" + mIsHash+ "; BuildConfig.GIT_HASH=" + BuildConfig.GIT_HASH + "; BuildConfig.VERSION_CODE=" + BuildConfig.VERSION_CODE);
-        //
-        //     if (mIsHash)
-        //         mBuildText.setText(versionCodeToDate(BuildConfig.VERSION_CODE));
-        //     else
-        //         mBuildText.setText(BuildConfig.GIT_HASH);
-        //
-        //     mIsHash = !mIsHash;
-        //
-        //     return true;
-        // }
-
         @Override
         public boolean onDown(MotionEvent e) {
-            Log.e(LOGTAG, "__verbose__ [1] onDown: mIsHash=" + mIsHash+ "; BuildConfig.GIT_HASH=" + BuildConfig.GIT_HASH + "; BuildConfig.VERSION_CODE=" + BuildConfig.VERSION_CODE);
+            Log.e(LOGTAG, "__verbose__ [8] onDown: mIsHash=" + mIsHash+ "; BuildConfig.GIT_HASH=" + BuildConfig.GIT_HASH + "; BuildConfig.VERSION_CODE=" + BuildConfig.VERSION_CODE);
             return true;
         }
 
         @Override
-        public void onLongPress(MotionEvent e) {
-            Log.e(LOGTAG, "__verbose__ [1] onLongPress: mIsHash=" + mIsHash+ "; BuildConfig.GIT_HASH=" + BuildConfig.GIT_HASH + "; BuildConfig.VERSION_CODE=" + BuildConfig.VERSION_CODE);
+        public boolean onSingleTapUp(MotionEvent e) {
+            Log.e(LOGTAG, "__verbose__ [8] onSingleTapUp: mIsHash=" + mIsHash+ "; BuildConfig.GIT_HASH=" + BuildConfig.GIT_HASH + "; BuildConfig.VERSION_CODE=" + BuildConfig.VERSION_CODE);
 
             if (mIsHash)
                 mBuildText.setText(versionCodeToDate(BuildConfig.VERSION_CODE));
@@ -87,8 +73,6 @@ public class SettingsWidget extends UIWidget implements WidgetManagerDelegate.Fo
                 mBuildText.setText(BuildConfig.GIT_HASH);
 
             mIsHash = !mIsHash;
-
-            return true;
         }
     }
 
@@ -191,6 +175,7 @@ public class SettingsWidget extends UIWidget implements WidgetManagerDelegate.Fo
         mBuildText.setText(versionCodeToDate(BuildConfig.VERSION_CODE));
 
         ViewGroup versionLayout = findViewById(R.id.optionsLayout);
+
         final GestureDetector gd = new GestureDetector(getContext(), new VersionGestureListener());
         versionLayout.setOnTouchListener((view, motionEvent) -> {
             if (gd.onTouchEvent(motionEvent)) {
