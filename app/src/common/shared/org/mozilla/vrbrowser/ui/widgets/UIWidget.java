@@ -10,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -63,19 +64,80 @@ public abstract class UIWidget extends FrameLayout implements Widget {
         initialize();
     }
 
+    public static float convertDpToPixel(float dp, Context context) {
+        return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+    }
+
+    /**
+     * This method converts device specific pixels to density independent pixels.
+     *
+     * @param px A value in px (pixels) unit. Which we need to convert into db
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent dp equivalent to px value
+     */
+    public static float convertPixelsToDp(float px, Context context) {
+        return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+    }
+
     private void initialize() {
         mBorderWidth = SettingsStore.getInstance(getContext()).getTransparentBorderWidth();
         mWidgetManager = (WidgetManagerDelegate) getContext();
         mWidgetPlacement = new WidgetPlacement(getContext());
         mHandle = mWidgetManager.newWidgetHandle();
         mWorldWidth = WidgetPlacement.pixelDimension(getContext(), R.dimen.world_width);
+
+        int dp1Px = getResources().getDimensionPixelSize(R.dimen.dp_1);
+        int dp10Px = getResources().getDimensionPixelSize(R.dimen.dp_10);
+        int dp20Px = getResources().getDimensionPixelSize(R.dimen.dp_20);
+        int dp30Px = getResources().getDimensionPixelSize(R.dimen.dp_30);
+        int dp40Px = getResources().getDimensionPixelSize(R.dimen.dp_40);
+        int dp88Px = getResources().getDimensionPixelSize(R.dimen.dp_88);
+        int dp324Px = getResources().getDimensionPixelSize(R.dimen.dp_324);
+        int dp585Px = getResources().getDimensionPixelSize(R.dimen.dp_585);
+        int dp720Px = getResources().getDimensionPixelSize(R.dimen.dp_720);
+
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 1dp: " + dp1Px + "px");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 10dp: " + dp10Px + "px");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 20dp: " + dp20Px + "px");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 30dp: " + dp30Px + "px");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 40dp: " + dp40Px + "px");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 88dp: " + dp88Px + "px");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 324dp: " + dp324Px + "px");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 585dp: " + dp585Px + "px");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 720dp: " + dp720Px + "px");
+
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 1.2dp: " + convertDpToPixel((float) 1.2, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 2dp: " + convertDpToPixel((float) 2.0, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 4dp: " + convertDpToPixel((float) 4.0, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 10dp: " + convertDpToPixel((float) 10.0, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 20dp: " + convertDpToPixel((float) 20.0, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 25dp: " + convertDpToPixel((float) 25.0, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 40dp: " + convertDpToPixel((float) 40.0, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 88dp: " + convertDpToPixel((float) 88.0, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 165dp: " + convertDpToPixel((float) 165.0, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 324dp: " + convertDpToPixel((float) 324.0, getContext()) + "px");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] 585dp: " + convertDpToPixel((float) 585.0, getContext()) + "px");
+
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] World width: " + R.dimen.world_width + " (" + convertDpToPixel(Float.parseFloat(R.dimen.world_width), getContext()) + ")");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] World width: " + R.dimen.world_width + "");
+
         initializeWidgetPlacement(mWidgetPlacement);
         mInitialWidth = mWidgetPlacement.width;
         mInitialHeight = mWidgetPlacement.height;
+
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] Initial width: " + mInitialWidth + "");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] Initial height: " + mInitialHeight + "");
+
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] Initial width: " + mInitialWidth + " (" + convertDpToPixel((float) mInitialWidth, getContext()) + "px)");
+        // Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] Initial height: " + mInitialHeight + " (" + convertDpToPixel((float) mInitialHeight, getContext()) + "px)");
+
         // Transparent border useful for TimeWarp Layers and better aliasing.
         final float scale = getResources().getDisplayMetrics().density;
         int padding_px = (int) (mBorderWidth * scale + 0.5f);
         this.setPadding(padding_px, padding_px, padding_px, padding_px);
+
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] Scale: " + scale + " (" + padding_px + "px)");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [initialize] Border width: " + mBorderWidth + "px");
 
         mChildren = new HashMap<>();
         mBackHandler = () -> onDismiss();
@@ -174,6 +236,12 @@ public abstract class UIWidget extends FrameLayout implements Widget {
             mWidgetPlacement.height = defaultHeight;
         }
         mWidgetPlacement.worldWidth = aWorldWidth;
+        Log.d(LOGTAG, "[dimen] [UIWidget] [handleResizeEvent] [Before] World Width: " + aWorldWidth + "");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [handleResizeEvent] [Before] World Height: " + aWorldHeight + "");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [handleResizeEvent] [After] Widget Placement Width: " + mWidgetPlacement.width + "");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [handleResizeEvent] [After] Widget Placement Height: " + mWidgetPlacement.height + "");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [handleResizeEvent] [After] World Width: " + aWorldWidth + "");
+        Log.d(LOGTAG, "[dimen] [UIWidget] [handleResizeEvent] [After] World Height: " + aWorldHeight + "");
         mWidgetManager.updateWidget(this);
     }
 

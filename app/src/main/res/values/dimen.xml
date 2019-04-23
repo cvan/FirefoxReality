@@ -1,4 +1,14 @@
 <resources>
+    <dimen name="dp_1">1dp</dimen>
+    <dimen name="dp_10">10dp</dimen>
+    <dimen name="dp_20">20dp</dimen>
+    <dimen name="dp_30">30dp</dimen>
+    <dimen name="dp_40">40dp</dimen>
+    <dimen name="dp_88">88dp</dimen>
+    <dimen name="dp_324">324dp</dimen>
+    <dimen name="dp_585">585dp</dimen>
+    <dimen name="dp_720">720dp</dimen>
+
     <!-- World -->
     <dimen name="world_width">800px</dimen>
 
