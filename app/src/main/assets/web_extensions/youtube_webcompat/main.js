@@ -1,71 +1,102 @@
+console.log('[webext] [2] modified navigator', navigator.userAgent, navigator.appVersion, navigator.platform, navigator.vendor);
+console.log('[webext] [2] navigator.userAgent: ' + navigator.userAgent);
+
+window.ontouchstart = null;
+// window.stop();
+
+var script = document.createElement('script');
+script.textContent = `
+window.ontouchstart = evt => {
+  console.log(evt.type, evt);
+};
+window.ontouchmove = evt => {
+  console.log(evt.type, evt);
+};
+window.ontouchend = evt => {
+  console.log(evt.type, evt);
+};
+// Pretend to be Oculus Browser on the Go.
+if (!('chrome' in window)) {
+  window.chrome = {};
+}
+Object.defineProperty(navigator, 'userAgent', {
+  get: function () {
+    return 'Mozilla/5.0 (Linux; Android 7.1.2; Pacific Build/N2G48H) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/5.8.7.151134584 Chrome/66.0.3359.203 Mobile VR Safari/537.36 client inline Object.defineProperty';
+  }
+});
+navigator.__defineGetter__('appVersion', function () {
+  return '5.0 (Linux; Android 7.1.2; Pacific Build/N2G48H) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/5.8.7.151134584 Chrome/66.0.3359.203 Mobile VR Safari/537.36 client';
+});
+navigator.__defineGetter__('platform', function () {
+  return 'Linux armv8l';
+});
+navigator.__defineGetter__('vendor', function () {
+  return 'Google Inc.';
+});
+console.log('[webext] [mock] script inserted before');
+`;
+script.async = false;
+
 (function () {
-  console.log('[webext] loaded');
+  console.log('[webext] loaded [2.10••••]');
 
   document.addEventListener('DOMContentLoaded', onDomReady, false);
+
+  const dl8Script = document.documentElement.querySelector('script[src*="//cdn.delight-vr.com/"]');
+  if (dl8Script) {
+    dl8Script.removeAttribute('src');
+    dl8Script.async = false;
+    dl8Script.removeAttribute('async');
+    dl8Script.defer = true;
+    dl8Script.src = 'https://192.168.86.243:9000/latest/dl8-3e3af913f9d53da7a03b113754466c5ffdddb3cd.js?1';
+  }
 
   onDomReady();
 
   function onDomReady () {
     console.log('[webext] on onDomReady');
-    const script = document.documentElement.querySelector('script[src*="//cdn.delight-vr.com/"]');
-    if (script) {
-      console.log('[webext] delight-vr script found');
-      script.src = script.src.replace('cdn.delight-vr.com', '192.168.86.243:9000');
-      console.log('[webext] delight-vr script src', script.src);
-      console.log('[webext] delight-vr script', script);
+
+    const dl8Script = document.documentElement.querySelector('script[src*="//cdn.delight-vr.com/"]');
+    if (dl8Script) {
+      dl8Script.removeAttribute('src');
+      dl8Script.async = false;
+      dl8Script.removeAttribute('async');
+      dl8Script.defer = true;
+      dl8Script.src = 'https://192.168.86.243:9000/latest/dl8-3e3af913f9d53da7a03b113754466c5ffdddb3cd.js?2';
+      dl8Script.parentNode.insertBefore(script, dl8Script);
+
+      // dl8Script.async = true;
+
+      console.log('[webext] [3] navigator.userAgent: ' + navigator.userAgent);
+
+      console.log('[webext] [xxx] delight-vr script found', dl8Script.src);
     } else {
       console.log('[webext] delight-vr script *NOT* found');
     }
   }
 
-  if (!('chrome' in window)) {
-    window.chrome = {};
-  }
-  let navigator = window.navigator;
-  let modifiedNavigator;
-  if ('userAgent' in Navigator.prototype) {
-    // Chrome 43+ moved all properties from `navigator` to the prototype,
-    // so we have to modify the prototype instead of `navigator`.
-    modifiedNavigator = Navigator.prototype;
-  } else {
-    // Chrome 42- defined the property on `navigator`.
-    modifiedNavigator = Object.create(navigator);
-    Object.defineProperty(window, 'navigator', {
-      value: modifiedNavigator,
-      configurable: false,
-      enumerable: false,
-      writable: false
-    });
-  }
-  // Pretend to be Oculus Browser on the Go.
-  Object.defineProperties(modifiedNavigator, {
-    userAgent: {
-      value: 'Mozilla/5.0 (Linux; Android 7.1.2; Pacific Build/N2G48H) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/5.8.7.151134584 SamsungBrowser/4.0 Chrome/66.0.3359.203 Mobile VR Safari/537.36',
-      configurable: false,
-      enumerable: true,
-      writable: false
-    },
-    appVersion: {
-      value: '5.0 (Linux; Android 7.1.2; Pacific Build/N2G48H) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/5.8.7.151134584 SamsungBrowser/4.0 Chrome/66.0.3359.203 Mobile VR Safari/537.36',
-      configurable: false,
-      enumerable: true,
-      writable: false
-    },
-    platform: {
-      value: 'Linux armv8l',
-      configurable: false,
-      enumerable: true,
-      writable: false
-    },
-    vendor: {
-      value: 'Google Inc.',
-      configurable: false,
-      enumerable: true,
-      writable: false
-    },
-  });
+  var config = { attributes: true, childList: true, subtree: true };
 
-  console.log('[webext] modified navigator', navigator.userAgent, navigator.appVersion, navigator.platform, navigator.vendor);
+  // Callback function to execute when mutations are observed
+  var callback = (mutationsList, observer) => {
+    for (var mutation of mutationsList) {
+      // if (mutation.type == 'childList') {
+      //   console.log('[webext] A child node has been added or removed.');
+      // } else if (mutation.type == 'attributes') {
+      //   console.log('[webext] The ' + mutation.attributeName + ' attribute was modified.');
+      // }
+      if (mutation.target.matches('script')) {
+        console.log('[webext] <script> added', mutation.target.src, mutation.type);
+      } else if (mutation.target.matches('body')) {
+        console.log('[webext] added to <body>', mutation.target, mutation.type);
+      } else if (mutation.target.matches('html')) {
+        console.log('[webext] added to <html>', mutation.target, mutation.type);
+      }
+    }
+  };
+  // var observer = new MutationObserver(callback);
+  // observer.observe(document.documentElement, config);
+  console.log('[webext] observing mutations');
 
   const dl8Events = [
   "x-dl8-evt-vr-wizard-enabled",
