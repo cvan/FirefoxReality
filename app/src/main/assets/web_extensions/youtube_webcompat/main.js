@@ -1,4 +1,123 @@
 (function () {
+  console.log('[webext] loaded');
+
+  document.addEventListener('DOMContentLoaded', onDomReady, false);
+
+  onDomReady();
+
+  function onDomReady () {
+    console.log('[webext] on onDomReady');
+    const script = document.documentElement.querySelector('script[src*="//cdn.delight-vr.com/"]');
+    if (script) {
+      console.log('[webext] delight-vr script found');
+      script.src = script.src.replace('cdn.delight-vr.com', '192.168.86.243:9000');
+      console.log('[webext] delight-vr script src', script.src);
+      console.log('[webext] delight-vr script', script);
+    } else {
+      console.log('[webext] delight-vr script *NOT* found');
+    }
+  }
+
+  if (!('chrome' in window)) {
+    window.chrome = {};
+  }
+  let navigator = window.navigator;
+  let modifiedNavigator;
+  if ('userAgent' in Navigator.prototype) {
+    // Chrome 43+ moved all properties from `navigator` to the prototype,
+    // so we have to modify the prototype instead of `navigator`.
+    modifiedNavigator = Navigator.prototype;
+  } else {
+    // Chrome 42- defined the property on `navigator`.
+    modifiedNavigator = Object.create(navigator);
+    Object.defineProperty(window, 'navigator', {
+      value: modifiedNavigator,
+      configurable: false,
+      enumerable: false,
+      writable: false
+    });
+  }
+  // Pretend to be Oculus Browser on the Go.
+  Object.defineProperties(modifiedNavigator, {
+    userAgent: {
+      value: 'Mozilla/5.0 (Linux; Android 7.1.2; Pacific Build/N2G48H) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/5.8.7.151134584 SamsungBrowser/4.0 Chrome/66.0.3359.203 Mobile VR Safari/537.36',
+      configurable: false,
+      enumerable: true,
+      writable: false
+    },
+    appVersion: {
+      value: '5.0 (Linux; Android 7.1.2; Pacific Build/N2G48H) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/5.8.7.151134584 SamsungBrowser/4.0 Chrome/66.0.3359.203 Mobile VR Safari/537.36',
+      configurable: false,
+      enumerable: true,
+      writable: false
+    },
+    platform: {
+      value: 'Linux armv8l',
+      configurable: false,
+      enumerable: true,
+      writable: false
+    },
+    vendor: {
+      value: 'Google Inc.',
+      configurable: false,
+      enumerable: true,
+      writable: false
+    },
+  });
+
+  console.log('[webext] modified navigator', navigator.userAgent, navigator.appVersion, navigator.platform, navigator.vendor);
+
+  const dl8Events = [
+  "x-dl8-evt-vr-wizard-enabled",
+  "x-dl8-evt-vr-wizard-disabled",
+  "x-dl8-evt-element-created",
+  "x-dl8-evt-start",
+  "x-dl8-evt-exit",
+  "x-dl8-evt-enter-fullscreen",
+  "x-dl8-evt-exit-fullscreen",
+  "x-dl8-evt-enable-interface",
+  "x-dl8-evt-disable-interface",
+  "x-dl8-evt-show-content",
+  "x-dl8-evt-element-disconnected",
+  "x-dl8-evt-element-attribute-changed",
+  "x-dl8-evt-element-connected",
+  "x-dl8-evt-video-play",
+  "x-dl8-evt-video-pause",
+  "x-dl8-evt-video-seek",
+  "x-dl8-evt-video-mute",
+  "x-dl8-evt-video-unmute",
+  "x-dl8-evt-ready",
+  "x-dl8-evt-element-connected",
+  "x-dl8-evt-element-disconnected",
+  "x-dl8-evt-start",
+  "x-dl8-evt-did-start",
+  "x-dl8-evt-exit",
+  "x-dl8-evt-did-exit",
+  "x-dl8-evt-video-play",
+  "x-dl8-evt-video-pause",
+  "x-dl8-evt-video-seek",
+  "x-dl8-evt-video-mute",
+  "x-dl8-evt-video-unmute",
+  "x-dl8-evt-enter-fullscreen",
+  "x-dl8-evt-exit-fullscreen",
+  "x-dl8-evt-enable-interface",
+  "x-dl8-evt-disable-interface",
+  "x-dl8-evt-show-content",
+  ];
+
+  dl8Events.forEach(evtName => {
+    document.addEventListener(evtName, evt => {
+      console.log(`[webext] [dl8] ${evt.type}`);
+    });
+  });
+
+  if (!window.location.hostname.endsWith('youtube.com')) {
+    console.log('[webext] not youtube');
+    return;
+  }
+
+  console.log('[webext] is youtube');
+
   // If missing, inject a `<meta name="viewport">` tag to trigger YouTube's mobile layout.
   window.addEventListener('load', () => {
     let viewport = document.head.querySelector('meta[name="viewport"]');
@@ -10,7 +129,7 @@
     }
   });
 
-  const LOGTAG = '[firefoxreality:webcompat]'
+  const LOGTAG = '[firefoxreality:webcompat]';
   const qs = new URLSearchParams(window.location.search);
   let retryTimeout = null;
 
