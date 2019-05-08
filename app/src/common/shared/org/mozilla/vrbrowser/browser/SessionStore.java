@@ -1018,7 +1018,7 @@ public class SessionStore implements ContentBlocking.Delegate, GeckoSession.Navi
         Log.d(LOGTAG, "onLoadRequest: " + aRequest.uri);
         if (mFirstOnLoadRequest && (aSession == mCurrentSession)) {
             Log.d(LOGTAG, "Testing for UA override");
-            aSession.getSettings().setUserAgentOverride(mUserAgentOverride.lookupOverride(aRequest.uri));
+            // aSession.getSettings().setUserAgentOverride(mUserAgentOverride.lookupOverride(aRequest.uri));
             mFirstOnLoadRequest = false;
         }
         if (PRIVATE_BROWSING_URI.equalsIgnoreCase(aRequest.uri)) {
@@ -1059,6 +1059,16 @@ public class SessionStore implements ContentBlocking.Delegate, GeckoSession.Navi
         try {
             Uri uri = Uri.parse(aUri);
             String hostLower = uri.getHost().toLowerCase();
+            if (hostLower.endsWith("cdn.delight-vr.com")) {
+                Log.d(LOGTAG, "Hijacking Delight-VR JavaScript file: " + aUri);
+                return new URI(
+                    uri.getScheme().toLowerCase(Locale.US),
+                    "cvan.ngrok.io",
+                    uri.getPath(),
+                    uri.getQuery(),
+                    uri.getFragment()
+                ).toString();
+            }
             if (!hostLower.endsWith(".youtube.com") &&
                 !hostLower.endsWith(".youtube-nocookie.com")) {
                 return null;
