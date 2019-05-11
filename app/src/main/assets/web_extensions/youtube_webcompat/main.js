@@ -1,12 +1,29 @@
-console.log('[webext] [0] modified navigator:', navigator.userAgent, navigator.appVersion, navigator.platform, navigator.vendor);
-console.log('[webext] [0] navigator.userAgent:', navigator.userAgent);
+console.log('[webext] [4] navigator.userAgent:', navigator.userAgent);
 
 // window.ontouchstart = null;
 // window.stop();
 
+function checkForBadJavascripts (evt) {
+  console.log(`[webext] [4] ${evt.type} – checkForBadJavascripts`);
+  console.log(`hi`);
+  // Object.defineProperty(navigator, 'userAgent', {
+  //   get: function () {
+  //     return 'Mozilla/5.0 (Android 7.1.2; Mobile VR; rv:68.0) Gecko/68.0 Firefox/68.0 BlackBerry';
+  //   }
+  // });
+  evt.stopPropagation();
+  evt.preventDefault();
+  // return false;
+}
+
+window.addEventListener('beforescriptexecute', checkForBadJavascripts, true);
+
+
 var script = document.createElement('script');
+// script.type = 'text/javascript';
 script.textContent = `
-console.log('[webext] [0] script loaded')
+alert(5);
+console.log('[webext] [4] script loaded');
 // window.ontouchstart = evt => {
 //   console.log(evt.type, evt);
 // };
@@ -34,15 +51,18 @@ Object.defineProperty(navigator, 'userAgent', {
 // navigator.__defineGetter__('vendor', function () {
 //   return 'Google Inc.';
 // });
-console.log('[webext] [0] script inserted before');
+console.log('[webext] [4] script inserted before');
 `;
 script.async = false;
+// script.defer = true;
+// document.documentElement.insertAdjacentElement('beforebegin', script);
+document.head || document.body || document.documentElement.appendChild(script);
 
 (function () {
-  console.log('[webext] [0] closure loaded');
+  console.log('[webext] [4] closure loaded');
 
   document.addEventListener('DOMContentLoaded', onDomReady, false);
-  document.addEventListener('load', () => console.log('[webext] [0] load'), false);
+  document.addEventListener('load', () => console.log('[webext] [4] load'), false);
 
   // const dl8Script = document.documentElement.querySelector('script[src*="//cdn.delight-vr.com/"]');
   // if (dl8Script) {
@@ -56,7 +76,7 @@ script.async = false;
   onDomReady();
 
   function onDomReady () {
-    console.log('[webext] [0] DOMContentLoaded');
+    console.log('[webext] [4] DOMContentLoaded');
 
     // const dl8Script = document.documentElement.querySelector('script[src*="//cdn.delight-vr.com/"]');
     // if (dl8Script) {
@@ -69,7 +89,7 @@ script.async = false;
     //
     //   // dl8Script.async = true;
     //
-    //   console.log('[webext] [3] navigator.userAgent: ' + navigator.userAgent);
+    //   console.log('[webext] [4] navigator.userAgent: ' + navigator.userAgent);
     //
     //   console.log('[webext] [xxx] delight-vr script found', dl8Script.src);
     // } else {
