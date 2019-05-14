@@ -1,9 +1,13 @@
 const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12) AppleWebKit/602.1.21 (KHTML, like Gecko) Version/9.2 Safari/602.1.21';
 const LOGTAG = '[firefoxreality:webcompat:youtube]';
+const YT_SELECTORS = {
+  disclaimer: '.yt-alert-message, yt-alert-message',
+  moviePlayer: '#movie_player'
+};
 
 try {
-  // Note: Like Oculus Browser, we intentionally use this `User-Agent` string for YouTube to force the most optimal
-  // layout available for playback in a mobile VR browser.
+  // Note: À la Oculus Browser, we intentionally use this particular `User-Agent` string
+  // for YouTube to force the most optimal, high-resolution layout available for playback in a mobile VR browser.
   Object.defineProperty(navigator, 'userAgent', {
     get: () => CUSTOM_USER_AGENT
   });
@@ -22,7 +26,7 @@ try {
   const prefs = {
     hd: false,
     quality: 1440,
-    log: qs.get('debug') !== '0' && qs.get('mozdebug') !== '0' && qs.get('mozDebug') !== '0',
+    log: qs.get('mozDebug') !== '0' && qs.get('mozdebug') !== '0' && qs.get('debug') !== '0',
     retryAttempts: parseInt(qs.get('retryAttempts') || qs.get('retryattempts') || '10', 10),
     retryTimeout: parseInt(qs.get('retryTimeout') || qs.get('retrytimeout') || '500', 10)
   };
@@ -34,17 +38,81 @@ try {
   const logWarn = (...args) => printLog && console.warn(LOGTAG, ...args);
 
   window.addEventListener('click', evt => {
-    if (is360 && evt.target.closest('#movie_player') && !evt.target.closest('.ytp-chrome-bottom')) {
-      document.getElementById('movie_player').requestFullscreen();
+    if (is360 && evt.target.closest(YT_SELECTORS.moviePlayer) && !evt.target.closest('.ytp-chrome-bottom')) {
+      const playerEl = document.querySelector(YT_SELECTORS.moviePlayer);
+      if (!playerEl) {
+        return;
+      }
+      playerEl.requestFullscreen();
     }
   });
+
+  const observerConfig = {
+    attributes: false,
+    characterData: true,
+    characterDataOldValue: true,
+    childList: true
+  };
+
+  function hasElChanged (el) {
+    if (!el) {
+      return;
+    }
+    return el.matches(YT_SELECTORS.disclaimer);
+  }
+
+  const observer = new MutationObserver((mutationsList, observer) => {
+    for (let mutation of mutationsList) {
+      const modifiedEls = {
+        added: [],
+        removed: [],
+        modified: []
+      };
+      const addedEls = [];
+      let targetEl;
+      if (mutation.type === 'childList') {
+        for (let idx = 0; idx < mutation.addedNodes.length; idx++) {
+          targetEl = mutation.addedNodes[idx];
+          if (hasElChanged(targetEl)) {
+            modifiedEls.added.push(targetEl);
+            emitElChanged(targetEl, 'added');
+          }
+        }
+        console.log(`Added nodes:`, modifiedEls.added);
+        for (let idx = 0; idx < mutation.removedNodes.length; idx++) {
+          targetEl = mutation.removedNodes[idx];
+          if (hasElChanged(targetEl)) {
+            modifiedEls.removed.push(targetEl);
+            emitElChanged(targetEl, 'removed');
+          }
+        }
+        console.log(`Removed nodes:`, modifiedEls.removed);
+      } else if (mutation.type === 'characterData') {
+        if (hasElChanged(targetEl)) {
+          modifiedEls.modified.push(targetEl);
+          emitElChanged(targetEl, 'modified');
+        }
+        console.log(`Text content changed; modified nodes:`, modifiedEls.modified);
+      } else if (mutation.type === 'attributes') {
+        targetEl = mutation.target;
+        if (hasElChanged(targetEl)) {
+          modifiedEls.modified.push(targetEl);
+          emitElChanged(targetEl, 'modified');
+        }
+        console.log(`Attribute "${mutation.attributeName}" changed; modified nodes:`, modifiedEls.modified);
+      }
+      return modifiedEls();
+    }
+  });
+
+  observer.observe(targetNode, observerConfig);
 
   window.addEventListener('load', () => {
     viewportEl = document.querySelector('meta[name="viewport"]:not([data-fxr-injected])');
     if (viewportEl) {
       viewportEl.parentNode.removeChild(viewportEl);
     }
-    const disclaimerEl = document.querySelector('.yt-alert-message');
+    const disclaimerEl = document.querySelector(YT_SELECTORS.disclaimer);
     is360 = disclaimerEl ? disclaimerEl.textContent.includes('360') : false;
     if (is360) {
       ytImprover360();
@@ -59,12 +127,18 @@ try {
     qs = new URLSearchParams(window.location.search);
 
     const currentProjection = (qs.get('mozVideoProjection') || '').toLowerCase();
-    let newUrl;
-    if (currentProjection !== '360' && currentProjection !== '360_auto') {
-      qs.set('mozVideoProjection', '360_auto');
-      newUrl = getNewUrl(qs);
+    qs.delete('mozVideoProjection');
+    switch (currentProjection) {
+      case '360':
+        qs.set('mozVideoProjection', '360');
+        break;
+      case '360_auto':
+      default:
+        qs.set('mozVideoProjection', '360_auto');
+        break;
     }
 
+    const newUrl = getNewUrl(qs);
     if (newUrl && window.location.pathname + window.location.search !== newUrl) {
       window.history.replaceState({}, document.title, newUrl);
       return newUrl;
@@ -92,7 +166,7 @@ try {
       return;
     }
 
-    let player = document.getElementById('movie_player');
+    let player = document.querySelector(YT_SELECTORS.moviePlayer);
     let reason = 'unknown';
     if (state !== 1) {
       reason = 'invalid state';
