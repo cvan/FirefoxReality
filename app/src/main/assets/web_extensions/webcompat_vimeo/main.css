@@ -1,0 +1,9 @@
+iframe[data-fxr-patched="360"] {
+  border-width: 0;
+  height: 100%;
+  width: 100%;
+}
+
+iframe[data-fxr-patched="360"][hidden] {
+  display: none;
+}
