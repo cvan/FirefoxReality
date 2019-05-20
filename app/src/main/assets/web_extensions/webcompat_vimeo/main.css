@@ -7,3 +7,41 @@ iframe[data-fxr-patched="360"] {
 iframe[data-fxr-patched="360"][hidden] {
   display: none;
 }
+
+html[data-fxr-is-360="true"],
+html[data-fxr-is-360="true"] body,
+html[data-fxr-is-360="true"] .player,
+html[data-fxr-is-360="true"] .fallback {
+  background-color: transparent;
+}
+
+html[data-fxr-is-360="true"] .vp-placeholder {
+  background: transparent !important;
+}
+
+/*
+"embed.transparent": 0 -> 1
+
+before:
+"spatial": {
+  "stereo_mode": "mono",
+  "fov": 55,
+  "director_timeline": {
+    "0": {
+      "y": 100,
+      "p": 2,
+      "r": 0
+    }
+  },
+  "projection": "equirectangular"
+},
+
+after:
+"video.spatial": 0,
+
+"video.spatial.projection" === "equirectangular"
+
+modify `embed_code` to add `?canvas=1&mozVideoProjection=360`
+
+revert to 360 from 360_auto after first successful VR enter
+*/
